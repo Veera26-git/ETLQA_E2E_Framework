@@ -20,6 +20,10 @@ tables:
       name: str
       hire_date: datetime64[ns]
       salary: float
+    transformations:
+      - name: salary_usd
+        source_expression: "salary * 1.2"
+        target_column: salary_usd
   departments:
     source:
       type: csv
@@ -39,6 +43,7 @@ tables:
     schema:
       dept_id: int
       dept_name: str
+    # No transformations for departments currently
   projects:
     source:
       type: csv
@@ -61,6 +66,10 @@ tables:
       department_id: int
       start_date: datetime64[ns]
       budget: float
+    transformations:
+      - name: budget_usd
+        source_expression: "budget * 1.2"
+        target_column: budget_usd
     fkeys:
       - column: department_id
         ref_table: departments

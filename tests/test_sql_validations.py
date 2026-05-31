@@ -26,6 +26,7 @@ import pytest
 from typing import Dict, Any, List, Tuple
 
 from sqlalchemy.engine import Engine
+from sqlalchemy import text
 
 # ---------------------------------------------------------------------------
 # Helpers – load metadata and create DB engines
@@ -143,13 +144,20 @@ def test_transformation_validation(
     src_tbl = cfg["source"].get("table", table_key)
     tgt_tbl = cfg["target"]["table"]
     for tr in cfg["transformations"]:
+        # ``source_expression`` is evaluated on the source side; we sum the result.
         src_val = fetch_one(
-            oracle_engine, f"SELECT SUM({tr['source_sql']}) FROM {src_tbl}"
+            oracle_engine,
+            f"SELECT SUM({tr['source_expression']}) FROM {src_tbl}"
         )
+        # ``target_column`` is the column created by the transformation on the target.
         tgt_val = fetch_one(
-            sqlserver_engine, f"SELECT SUM({tr['target_sql']}) FROM {tgt_tbl}"
+            sqlserver_engine,
+            f"SELECT SUM({tr['target_column']}) FROM {tgt_tbl}"
         )
-        assert src_val == tgt_val, f"Transformation '{tr['name']}' failed for {table_key}: source={src_val}, target={tgt_val}"
+        assert src_val == tgt_val, (
+            f"Transformation '{tr.get('name', '<unnamed>')}' failed for {table_key}: "
+            f"source sum={src_val}, target sum={tgt_val}"
+        )
 
 
 # ---------------------------------------------------------------------------
