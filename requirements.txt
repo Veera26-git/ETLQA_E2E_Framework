@@ -10,3 +10,6 @@ pyodbc>=5.0.0
 cx_Oracle>=8.3.0
 # For SQL Server connections
 pyodbc
+# Optional helpers for environment variables and HTML test reports
+python-dotenv>=1.0.0
+pytest-html>=4.0.0
