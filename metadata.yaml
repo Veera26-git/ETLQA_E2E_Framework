@@ -1,0 +1,33 @@
+tables:
+  employees:
+    source:
+      type: csv
+      path: employees.csv
+    target:
+      type: sqlserver
+      table: dbo.employees
+    validations:
+      - count
+      - null
+      - duplicate
+      - schema
+    schema:
+      id: int
+      name: str
+      hire_date: datetime64[ns]
+      salary: float
+  departments:
+    source:
+      type: csv
+      path: departments.csv
+    target:
+      type: sqlserver
+      table: dbo.departments
+    validations:
+      - count
+      - null
+      - duplicate
+      - schema
+    schema:
+      dept_id: int
+      dept_name: str

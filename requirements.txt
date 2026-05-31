@@ -1,0 +1,12 @@
+# requirements.txt
+pandas>=2.2.0
+numpy>=2.0.0
+sqlalchemy>=2.0.0
+openpyxl>=3.1.2
+pytest>=8.0.0
+jinja2>=3.1.4
+pyodbc>=5.0.0
+# Oracle client drivers (e.g., cx_Oracle) - optional based on environment
+cx_Oracle>=8.3.0
+# For SQL Server connections
+pyodbc
