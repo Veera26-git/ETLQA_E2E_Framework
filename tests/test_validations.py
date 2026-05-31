@@ -87,4 +87,3 @@ def test_schema_validation_catches_type_mismatch(table_key: str):
         tgt[numeric_cols[0]] = tgt[numeric_cols[0]].astype(str)
     failures = v.run_validations(table_key, src, tgt)
     assert any("schema" in f.lower() for f in failures), f"Schema validation did not report a failure for {table_key}"
-"""
