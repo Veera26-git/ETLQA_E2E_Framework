@@ -31,44 +31,60 @@ def mock_load_target(monkeypatch):
     monkeypatch.setattr(loader, "load_target", _load_target_mock)
     yield
 
+# ---------------------------------------------------------------------------
+# Generic helper to get all table keys from metadata
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session")
+def all_table_keys() -> list:
+    return list(v.load_metadata()["tables"].keys())
 
-def test_all_validations_pass_for_employees():
-    """All configured validations should pass when source == target."""
-    table = "employees"
-    src = extract_source(table)
-    tgt = _load_target_mock(table)
-    failures = v.run_validations(table, src, tgt)
-    assert failures == [], f"Expected no failures, got: {failures}"
+# ---------------------------------------------------------------------------
+# 1️⃣ All validations should pass when source == target
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("table_key", ["employees", "departments", "projects"])
+def test_all_validations_pass(table_key: str):
+    """All configured validations should pass when source equals target."""
+    src = extract_source(table_key)
+    tgt = _load_target_mock(table_key)
+    failures = v.run_validations(table_key, src, tgt)
+    assert failures == [], f"Expected no failures for {table_key}, got: {failures}"
 
-
-def test_duplicate_validation_catches_duplicates():
-    """Inject a duplicate row in the target and ensure the duplicate validator fails."""
-    table = "employees"
-    src = extract_source(table)
-    tgt = _load_target_mock(table)
+# ---------------------------------------------------------------------------
+# 2️⃣ Duplicate validation catches duplicates
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("table_key", ["employees", "departments", "projects"])
+def test_duplicate_validation_catches_duplicates(table_key: str):
+    src = extract_source(table_key)
+    tgt = _load_target_mock(table_key)
     # Duplicate the first row
     tgt_dup = pd.concat([tgt, tgt.iloc[:1]], ignore_index=True)
-    failures = v.run_validations(table, src, tgt_dup)
-    # The duplicate validator adds a message ending with "duplicate validation failed"
-    assert any("duplicate" in f.lower() for f in failures), "Duplicate validation did not report a failure"
+    failures = v.run_validations(table_key, src, tgt_dup)
+    assert any("duplicate" in f.lower() for f in failures), f"Duplicate validation did not report a failure for {table_key}"
 
+# ---------------------------------------------------------------------------
+# 3️⃣ Null validation catches NaNs
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("table_key", ["employees", "departments", "projects"])
+def test_null_validation_catches_nulls(table_key: str):
+    src = extract_source(table_key)
+    tgt = _load_target_mock(table_key).copy()
+    # Introduce a NaN in the first column (if possible)
+    first_col = tgt.columns[0]
+    tgt.loc[0, first_col] = pd.NA
+    failures = v.run_validations(table_key, src, tgt)
+    assert any("null" in f.lower() for f in failures), f"Null validation did not report a failure for {table_key}"
 
-def test_null_validation_catches_nulls():
-    """Introduce NaN values in the target and expect the null validator to fail."""
-    table = "employees"
-    src = extract_source(table)
-    tgt = _load_target_mock(table).copy()
-    tgt.loc[0, "salary"] = pd.NA
-    failures = v.run_validations(table, src, tgt)
-    assert any("null" in f.lower() for f in failures), "Null validation did not report a failure"
-
-
-def test_schema_validation_catches_type_mismatch():
-    """Change a column dtype to string and verify the schema validator fails."""
-    table = "employees"
-    src = extract_source(table)
-    tgt = _load_target_mock(table).copy()
-    # Cast salary to string – schema expects ``float``
-    tgt["salary"] = tgt["salary"].astype(str)
-    failures = v.run_validations(table, src, tgt)
-    assert any("schema" in f.lower() for f in failures), "Schema validation did not report a failure"
+# ---------------------------------------------------------------------------
+# 4️⃣ Schema validation catches type mismatches
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("table_key", ["employees", "departments", "projects"])
+def test_schema_validation_catches_type_mismatch(table_key: str):
+    src = extract_source(table_key)
+    tgt = _load_target_mock(table_key).copy()
+    # Cast the first numeric column (if any) to string to provoke a type error
+    numeric_cols = [c for c in tgt.columns if pd.api.types.is_numeric_dtype(tgt[c])]
+    if numeric_cols:
+        tgt[numeric_cols[0]] = tgt[numeric_cols[0]].astype(str)
+    failures = v.run_validations(table_key, src, tgt)
+    assert any("schema" in f.lower() for f in failures), f"Schema validation did not report a failure for {table_key}"
+"""

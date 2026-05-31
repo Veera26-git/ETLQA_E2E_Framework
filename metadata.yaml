@@ -11,6 +11,10 @@ tables:
       - null
       - duplicate
       - schema
+      - data
+      - referential
+      - aggregate
+      - transformation
     schema:
       id: int
       name: str
@@ -28,6 +32,36 @@ tables:
       - null
       - duplicate
       - schema
+      - data
+      - referential
+      - aggregate
+      - transformation
     schema:
       dept_id: int
       dept_name: str
+  projects:
+    source:
+      type: csv
+      path: projects.csv
+    target:
+      type: sqlserver
+      table: dbo.projects
+    validations:
+      - count
+      - null
+      - duplicate
+      - schema
+      - data
+      - referential
+      - aggregate
+      - transformation
+    schema:
+      project_id: int
+      project_name: str
+      department_id: int
+      start_date: datetime64[ns]
+      budget: float
+    fkeys:
+      - column: department_id
+        ref_table: departments
+        ref_column: dept_id

@@ -1,0 +1,4 @@
+project_id,project_name,department_id,start_date,budget
+1,Project Alpha,1,2022-01-15,100000
+2,Project Beta,2,2022-03-20,150000
+3,Project Gamma,1,2022-06-01,200000
